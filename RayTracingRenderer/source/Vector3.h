@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Constants.h"
+
 #include <cmath>
 #include <iostream>
 
@@ -76,6 +78,11 @@ public:
 		return x * x + y * y + z * z;
 	}
 
+	bool IsNearZero()
+	{
+		return (std::fabs(x) < eps) && (std::fabs(y) < eps) && (std::fabs(z) < eps);
+	}
+
 private:
 	double x;
 	double y;
@@ -134,4 +141,9 @@ inline Vector3 Cross(const Vector3& u, const Vector3& v)
 inline Vector3 Normalize(const Vector3& v)
 {
 	return v / v.Lenght();
+}
+
+Vector3 Reflect(const Vector3& v, const Vector3& n)
+{
+	return v - 2 * Dot(v, n) * n;
 }

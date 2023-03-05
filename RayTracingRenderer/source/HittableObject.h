@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Ray.h"
+#include "Material.h"
 
 struct HitRecord
 {
@@ -8,6 +9,7 @@ struct HitRecord
 	Vector3 normal;
 	double t;
 	bool frontFace;
+	std::shared_ptr<Material> hittedMaterial;
 
 	inline void SetFaceNormal(const Ray& ray, const Vector3& outwardNormal)
 	{

@@ -138,6 +138,7 @@
     <ClInclude Include="source\Color.h" />
     <ClInclude Include="source\Constants.h" />
     <ClInclude Include="source\HittableObject.h" />
+    <ClInclude Include="source\Material.h" />
     <ClInclude Include="source\Ray.h" />
     <ClInclude Include="source\Scene.h" />
     <ClInclude Include="source\Sphere.h" />
