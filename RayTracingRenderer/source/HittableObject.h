@@ -1,7 +1,10 @@
 #pragma once
 
 #include "Ray.h"
-#include "Material.h"
+
+#include <memory>
+
+class Material;
 
 struct HitRecord
 {

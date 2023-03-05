@@ -56,8 +56,8 @@ int main()
 	// Materials.
 	auto groundMaterial = std::make_shared<LambertianMaterial>(Color(0.8, 0.8, 0.8));
 	auto centerMaterial = std::make_shared<LambertianMaterial>(Color(0.7, 0.3, 0.3));
-	auto leftMaterial = std::make_shared<MetalMaterial>(Color(0.8, 0.8, 0.8));
-	auto rightMaterial = std::make_shared<MetalMaterial>(Color(0.8, 0.6, 0.2));
+	auto leftMaterial = std::make_shared<MetalMaterial>(Color(0.8, 0.8, 0.8), 0.3);
+	auto rightMaterial = std::make_shared<MetalMaterial>(Color(0.8, 0.6, 0.2), 1.0);
 
 	// Scene.
 	Scene scene;

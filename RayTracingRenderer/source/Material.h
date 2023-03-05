@@ -42,16 +42,17 @@ public:
 class MetalMaterial : public Material
 {
 public:
-	MetalMaterial(const Color& color) : albedo(color) {}
+	MetalMaterial(const Color& color, double fuziness) : albedo(color), fuziness(std::clamp(fuziness, 0.0, 1.0)) {}
 
 	virtual bool Scatter(const Ray& inputRay, const HitRecord& hitRecord, Color& attenuation, Ray& scatteredRay) const override
 	{
 		Vector3 reflectedVector = Reflect(inputRay.Direction(), hitRecord.normal);
-		scatteredRay = Ray(hitRecord.point, reflectedVector);
+		scatteredRay = Ray(hitRecord.point, reflectedVector + fuziness * RandomVectorInUnitSphere());
 		attenuation = albedo;
-		// TODO: why do we need this line?
+
 		return (Dot(scatteredRay.Direction(), hitRecord.normal) > 0);
 	}
 
 	Color albedo;
+	double fuziness;
 };
