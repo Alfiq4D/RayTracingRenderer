@@ -147,3 +147,11 @@ Vector3 Reflect(const Vector3& v, const Vector3& n)
 {
 	return v - 2 * Dot(v, n) * n;
 }
+
+Vector3 Refract(const Vector3& v, const Vector3& n, double refractionRatio)
+{
+	auto cosTheta = std::fmin(Dot(-v, n), 1.0);
+	auto refractedPerp = refractionRatio * (v + cosTheta * n);
+	auto refractedParallel = -std::sqrt(std::fabs(1.0 - refractedPerp.LengthSquared())) * n;
+	return refractedPerp + refractedParallel;
+}

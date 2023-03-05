@@ -56,3 +56,35 @@ public:
 	Color albedo;
 	double fuziness;
 };
+
+class DielectricMaterial : public Material
+{
+public:
+	DielectricMaterial(double indexOfRefraction) : ir(indexOfRefraction) {}
+
+	virtual bool Scatter(const Ray& inputRay, const HitRecord& hitRecord, Color& attenuation, Ray& scatteredRay) const override
+	{
+		attenuation = Color(1.0, 1.0, 1.0);
+		double refractonRatio = hitRecord.frontFace ? (1.0 / ir) : ir;
+
+		// Why fmin here?
+		double cosTheta = std::fmin(Dot(-inputRay.Direction(), hitRecord.normal), 1.0);
+		double sinTheta = std::sqrt(1.0 - cosTheta * cosTheta);
+		bool cannotRefeact = refractonRatio * sinTheta > 1.0;
+		Vector3 direction;
+
+		if (cannotRefeact || Reflectance(cosTheta, refractonRatio) > RandomDouble())
+		{
+			direction = Reflect(inputRay.Direction(), hitRecord.normal);
+		}
+		else
+		{
+			direction = Refract(inputRay.Direction(), hitRecord.normal, refractonRatio);
+		}
+
+		scatteredRay = Ray(hitRecord.point, direction);
+		return true;
+	}
+
+	double ir; // Index of Refraction.
+};

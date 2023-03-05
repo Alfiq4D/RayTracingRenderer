@@ -56,14 +56,15 @@ int main()
 	// Materials.
 	auto groundMaterial = std::make_shared<LambertianMaterial>(Color(0.8, 0.8, 0.8));
 	auto centerMaterial = std::make_shared<LambertianMaterial>(Color(0.7, 0.3, 0.3));
-	auto leftMaterial = std::make_shared<MetalMaterial>(Color(0.8, 0.8, 0.8), 0.3);
-	auto rightMaterial = std::make_shared<MetalMaterial>(Color(0.8, 0.6, 0.2), 1.0);
+	auto leftMaterial = std::make_shared<DielectricMaterial>(1.5);
+	auto rightMaterial = std::make_shared<MetalMaterial>(Color(0.8, 0.6, 0.2), 0.2);
 
 	// Scene.
 	Scene scene;
 	scene.Add(std::make_shared<Sphere>(Point3(0.0, -50.5, -1.0), 50.0, groundMaterial));
 	scene.Add(std::make_shared<Sphere>(Point3(0.0, 0.0, -1.0), 0.5, centerMaterial));
 	scene.Add(std::make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), 0.5, leftMaterial));
+	scene.Add(std::make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), -0.4, leftMaterial));
 	scene.Add(std::make_shared<Sphere>(Point3(1.0, 0.0, -1.0), 0.5, rightMaterial));
 
 	// Render image.
