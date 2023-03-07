@@ -33,9 +33,19 @@ inline Vector3 RandomVector()
     return Vector3(RandomDouble(), RandomDouble(), RandomDouble());
 }
 
+inline Color RandomColor()
+{
+    return Color(RandomDouble(), RandomDouble(), RandomDouble());
+}
+
 inline Vector3 RandomVector(double min, double max) 
 {
     return Vector3(RandomDouble(min, max), RandomDouble(min, max), RandomDouble(min, max));
+}
+
+inline Color RandomColor(double min, double max)
+{
+    return Color(RandomDouble(min, max), RandomDouble(min, max), RandomDouble(min, max));
 }
 
 Vector3 RandomVectorInUnitSphere() 
@@ -48,6 +58,20 @@ Vector3 RandomVectorInUnitSphere()
             continue;
         }
         return v;
+    }
+}
+
+Vector3 RandomVectorInUnitDisk()
+{
+    // TODO: Better random selection - barycentric 
+    while (true)
+    {
+        auto vector = Vector3(RandomDouble(-1, 1), RandomDouble(-1, 1), 0);
+        if (vector.LengthSquared() >= 1)
+        {
+            continue;
+        }
+        return vector;
     }
 }
 

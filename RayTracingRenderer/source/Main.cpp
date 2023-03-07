@@ -38,18 +38,8 @@ Color RayColor(const Ray& r, const Scene& scene, int depth)
 	return (1.0 - t) * Color(1.0, 1.0, 1.0) + t * Color(0.5, 0.7, 1.0);
 }
 
-int main()
+Scene GeneratePreviewScene()
 {
-	// Image parameters.
-	const double aspectRatio = 16.0 / 9.0;
-	const int imageWidth = 400;
-	const int imageHeight = static_cast<int>(imageWidth / aspectRatio);
-	const int samplesPerPixel = 100;
-	const int maxDepth = 50;
-
-	// Camera.
-	Camera camera(Point3(0,0,0), Point3(0,0,-1), Vector3(0,1,0), 90, aspectRatio);
-
 	// Materials.
 	auto groundMaterial = std::make_shared<LambertianMaterial>(Color(0.8, 0.8, 0.8));
 	auto centerMaterial = std::make_shared<LambertianMaterial>(Color(0.7, 0.3, 0.3));
@@ -63,6 +53,80 @@ int main()
 	scene.Add(std::make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), 0.5, leftMaterial));
 	scene.Add(std::make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), -0.4, leftMaterial));
 	scene.Add(std::make_shared<Sphere>(Point3(1.0, 0.0, -1.0), 0.5, rightMaterial));
+
+	return scene;
+}
+
+Scene GenerateRandomScene()
+{
+	Scene scene;
+
+	auto groundMaterial = std::make_shared<LambertianMaterial>(Color(0.8, 0.8, 0.8));
+	scene.Add(std::make_shared<Sphere>(Point3(0, -1000, 0), 1000, groundMaterial));
+
+	for (int a = -11; a < 11; a++) {
+		for (int b = -11; b < 11; b++) {
+			auto materialSelection = RandomDouble();
+			Point3 center(a + 0.9 * RandomDouble(), 0.2, b + 0.9 * RandomDouble());
+
+			if ((center - Point3(4, 0.2, 0)).Lenght() > 0.9) {
+				std::shared_ptr<Material> sphereMaterial;
+
+				if (materialSelection < 0.8) {
+					// Diffuse.
+					auto albedo = RandomColor() * RandomColor();
+					sphereMaterial = std::make_shared<LambertianMaterial>(albedo);
+					scene.Add(std::make_shared<Sphere>(center, 0.2, sphereMaterial));
+				}
+				else if (materialSelection < 0.95) {
+					// Metal.
+					auto albedo = RandomColor(0.5, 1);
+					auto fuzz = RandomDouble(0, 0.5);
+					sphereMaterial = std::make_shared<MetalMaterial>(albedo, fuzz);
+					scene.Add(std::make_shared<Sphere>(center, 0.2, sphereMaterial));
+				}
+				else {
+					// Glass.
+					sphereMaterial = std::make_shared<DielectricMaterial>(1.5);
+					scene.Add(std::make_shared<Sphere>(center, 0.2, sphereMaterial));
+				}
+			}
+		}
+	}
+
+	auto material1 = std::make_shared<DielectricMaterial>(1.5);
+	scene.Add(std::make_shared<Sphere>(Point3(0, 1, 0), 1.0, material1));
+
+	auto material2 = std::make_shared<LambertianMaterial>(Color(0.4, 0.2, 0.1));
+	scene.Add(std::make_shared<Sphere>(Point3(-4, 1, 0), 1.0, material2));
+
+	auto material3 = std::make_shared<MetalMaterial>(Color(0.7, 0.6, 0.5), 0.0);
+	scene.Add(std::make_shared<Sphere>(Point3(4, 1, 0), 1.0, material3));
+
+	return scene;
+}
+
+int main()
+{
+	// Image parameters.
+	const double aspectRatio = 16.0 / 9.0;
+	const int imageWidth = 1200;
+	const int imageHeight = static_cast<int>(imageWidth / aspectRatio);
+	const int samplesPerPixel = 500;
+	const int maxDepth = 50;
+
+	// Camera.
+	Point3 cameraPosition(13, 2, 3);
+	Point3 cameraLookAt(0, 0, 0);
+	Point3 cameraFocusPoint(0, 0, 0);
+	Vector3 viewUp(0, 1, 0);
+	double cameraFov = 20.0;
+	double cameraAperture = 0.1;
+	double cameraDistToFocus = 10;
+
+	Camera camera(cameraPosition, cameraLookAt, viewUp, cameraFov, aspectRatio, cameraAperture, cameraDistToFocus);
+
+	auto scene = GenerateRandomScene();
 
 	// Render image.
 	std::cout << "P3\n" << imageWidth << ' ' << imageHeight << "\n255\n";
