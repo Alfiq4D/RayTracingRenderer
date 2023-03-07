@@ -2,31 +2,34 @@
 
 #include "Vector3.h"
 
-class Ray
+namespace rtr
 {
-public:
-	Ray() {};
-	Ray(const Point3& origin, const Vector3& direction) :
-		origin(origin),
-		direction(Normalize(direction))
-	{}
-
-	Point3 Origin() const 
+	class Ray
 	{
-		return origin; 
-	}
+	public:
+		Ray() {};
+		Ray(const Point3& origin, const Vector3& direction) :
+			origin(origin),
+			direction(Normalize(direction))
+		{}
 
-	Vector3 Direction() const
-	{
-		return direction;
-	}
+		Point3 Origin() const
+		{
+			return origin;
+		}
 
-	Point3 At(double t) const
-	{
-		return origin + t * direction;
-	}
+		Vector3 Direction() const
+		{
+			return direction;
+		}
 
-private:
-	Point3 origin;
-	Vector3 direction;
-};
+		Point3 At(double t) const
+		{
+			return origin + t * direction;
+		}
+
+	private:
+		Point3 origin;
+		Vector3 direction;
+	};
+}

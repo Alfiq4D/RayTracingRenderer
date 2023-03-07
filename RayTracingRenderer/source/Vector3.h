@@ -5,153 +5,156 @@
 #include <cmath>
 #include <iostream>
 
-class Vector3
+namespace rtr
 {
-public:
-	Vector3() : x(0.0), y(0.0), z(0.0) {}
-
-	Vector3(double x, double y, double z) : x(x), y(y), z(z) {}
-
-	double X() const
+	class Vector3
 	{
-		return x;
+	public:
+		Vector3() : x(0.0), y(0.0), z(0.0) {}
+
+		Vector3(double x, double y, double z) : x(x), y(y), z(z) {}
+
+		double X() const
+		{
+			return x;
+		}
+
+		double Y() const
+		{
+			return y;
+		}
+
+		double Z() const
+		{
+			return z;
+		}
+
+		double& X()
+		{
+			return x;
+		}
+
+		double& Y()
+		{
+			return y;
+		}
+
+		double& Z()
+		{
+			return z;
+		}
+
+		Vector3 operator-() const
+		{
+			return Vector3(-x, -y, -z);
+		}
+
+		Vector3& operator+=(const Vector3& vector)
+		{
+			x += vector.x;
+			y += vector.y;
+			z += vector.z;
+			return *this;
+		}
+
+		Vector3& operator*=(const double d)
+		{
+			x *= d;
+			y *= d;
+			z *= d;
+			return *this;
+		}
+
+		Vector3& operator/=(const double d)
+		{
+			return *this *= 1 / d;
+		}
+
+		double Lenght() const
+		{
+			return std::sqrt(LengthSquared());
+		}
+
+		double LengthSquared() const
+		{
+			return x * x + y * y + z * z;
+		}
+
+		bool IsNearZero()
+		{
+			return (std::fabs(x) < consts::eps) && (std::fabs(y) < consts::eps) && (std::fabs(z) < consts::eps);
+		}
+
+	private:
+		double x;
+		double y;
+		double z;
+	};
+
+	using Point3 = Vector3;
+
+	inline std::ostream& operator<<(std::ostream& out, const Vector3& v)
+	{
+		return out << v.X() << ' ' << v.Y() << ' ' << v.Z();
 	}
 
-	double Y() const
+	inline Vector3 operator+(const Vector3& v, const Vector3& u)
 	{
-		return y;
+		return Vector3(u.X() + v.X(), u.Y() + v.Y(), u.Z() + v.Z());
 	}
 
-	double Z() const
+	inline Vector3 operator-(const Vector3& u, const Vector3& v)
 	{
-		return z;
+		return Vector3(u.X() - v.X(), u.Y() - v.Y(), u.Z() - v.Z());
 	}
 
-	double& X()
+	inline Vector3 operator*(const Vector3& u, const Vector3& v)
 	{
-		return x;
+		return Vector3(u.X() * v.X(), u.Y() * v.Y(), u.Z() * v.Z());
 	}
 
-	double& Y()
+	inline Vector3 operator*(double d, const Vector3& v)
 	{
-		return y;
+		return Vector3(d * v.X(), d * v.Y(), d * v.Z());
 	}
 
-	double& Z()
+	inline Vector3 operator*(const Vector3& v, double d)
 	{
-		return z;
+		return d * v;
 	}
 
-	Vector3 operator-() const
+	inline Vector3 operator/(const Vector3& v, double d)
 	{
-		return Vector3(-x, -y, -z);
+		return (1 / d) * v;
 	}
 
-	Vector3& operator+=(const Vector3& vector)
+	inline double Dot(const Vector3& u, const Vector3& v)
 	{
-		x += vector.x;
-		y += vector.y;
-		z += vector.z;
-		return *this;
+		return u.X() * v.X() + u.Y() * v.Y() + u.Z() * v.Z();
 	}
 
-	Vector3& operator*=(const double d)
+	inline Vector3 Cross(const Vector3& u, const Vector3& v)
 	{
-		x *= d;
-		y *= d;
-		z *= d;
-		return *this;
+		return Vector3(u.Y() * v.Z() - u.Z() * v.Y(),
+			u.Z() * v.X() - u.X() * v.Z(),
+			u.X() * v.Y() - u.Y() * v.X());
 	}
 
-	Vector3& operator/=(const double d)
+	inline Vector3 Normalize(const Vector3& v)
 	{
-		return *this *= 1 / d;
+		return v / v.Lenght();
 	}
 
-	double Lenght() const
+	Vector3 Reflect(const Vector3& v, const Vector3& n)
 	{
-		return std::sqrt(LengthSquared());
+		return v - 2 * Dot(v, n) * n;
 	}
 
-	double LengthSquared() const
+	Vector3 Refract(const Vector3& v, const Vector3& n, double refractionRatio)
 	{
-		return x * x + y * y + z * z;
+		auto cosTheta = std::fmin(Dot(-v, n), 1.0);
+		auto refractedPerp = refractionRatio * (v + cosTheta * n);
+		auto refractedParallel = -std::sqrt(std::fabs(1.0 - refractedPerp.LengthSquared())) * n;
+		return refractedPerp + refractedParallel;
 	}
-
-	bool IsNearZero()
-	{
-		return (std::fabs(x) < eps) && (std::fabs(y) < eps) && (std::fabs(z) < eps);
-	}
-
-private:
-	double x;
-	double y;
-	double z;
-};
-
-using Point3 = Vector3;
-
-inline std::ostream& operator<<(std::ostream& out,const Vector3& v)
-{
-	return out << v.X() << ' ' << v.Y() << ' ' << v.Z();
-}
-
-inline Vector3 operator+(const Vector3& v, const Vector3& u)
-{
-	return Vector3(u.X() + v.X(), u.Y() + v.Y(), u.Z() + v.Z());
-}
-
-inline Vector3 operator-(const Vector3& u, const Vector3& v)
-{
-	return Vector3(u.X() - v.X(), u.Y() - v.Y(), u.Z() - v.Z());
-}
-
-inline Vector3 operator*(const Vector3& u, const Vector3& v)
-{
-	return Vector3(u.X() * v.X(), u.Y() * v.Y(), u.Z() * v.Z());
-}
-
-inline Vector3 operator*(double d, const Vector3& v)
-{
-	return Vector3(d * v.X(), d * v.Y(), d * v.Z());
-}
-
-inline Vector3 operator*(const Vector3& v, double d)
-{
-	return d * v;
-}
-
-inline Vector3 operator/(const Vector3& v, double d)
-{
-	return (1 / d) * v;
-}
-
-inline double Dot(const Vector3& u, const Vector3& v)
-{
-	return u.X() * v.X() + u.Y() * v.Y() + u.Z() * v.Z();
-}
-
-inline Vector3 Cross(const Vector3& u, const Vector3& v)
-{
-	return Vector3(u.Y() * v.Z() - u.Z() * v.Y(),
-		u.Z() * v.X() - u.X() * v.Z(),
-		u.X() * v.Y() - u.Y() * v.X());
-}
-
-inline Vector3 Normalize(const Vector3& v)
-{
-	return v / v.Lenght();
-}
-
-Vector3 Reflect(const Vector3& v, const Vector3& n)
-{
-	return v - 2 * Dot(v, n) * n;
-}
-
-Vector3 Refract(const Vector3& v, const Vector3& n, double refractionRatio)
-{
-	auto cosTheta = std::fmin(Dot(-v, n), 1.0);
-	auto refractedPerp = refractionRatio * (v + cosTheta * n);
-	auto refractedParallel = -std::sqrt(std::fabs(1.0 - refractedPerp.LengthSquared())) * n;
-	return refractedPerp + refractedParallel;
 }
