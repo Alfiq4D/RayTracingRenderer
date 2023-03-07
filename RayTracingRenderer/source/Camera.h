@@ -5,22 +5,30 @@
 class Camera
 {
 public:
-	Camera(double viewportWidth, double viewportHeight, double focalLength)
+	Camera(Point3 position, Point3 lookAt, Vector3 viewUpVector, double vFov, double aspectRatio) : origin(position)
 	{
-        origin = Point3(0, 0, 0);
-        horizontal = Vector3(viewportWidth, 0.0, 0.0);
-        vertical = Vector3(0.0, viewportHeight, 0.0);
-        // TODO: base direction
-        lowerLeftCorner = origin - horizontal / 2 - vertical / 2 - Vector3(0, 0, focalLength);
+        auto theta = DegreeToRadians(vFov);
+        auto height = std::tan(theta / 2.0);
+        auto viewportHeight = 2.0 * height;
+        auto viewportWidth = aspectRatio * viewportHeight;
+
+        // Focal lenght == 1.
+        auto cameraZ = Normalize(origin - lookAt);
+        auto cameraX = Normalize(Cross(viewUpVector, cameraZ));
+        auto cameraY = Cross(cameraZ, cameraX);
+
+        horizontalVector = viewportWidth * cameraX;
+        verticalVector = viewportHeight * cameraY;
+        lowerLeftOffset = -horizontalVector / 2 - verticalVector / 2 - cameraZ;
     }
 
     Ray GetRay(double u, double v) const {
-        return Ray(origin, lowerLeftCorner + u * horizontal + v * vertical - origin);
+        return Ray(origin, lowerLeftOffset + u * horizontalVector + v * verticalVector);
     }
 
 private:
     Point3 origin;
-    Point3 lowerLeftCorner;
-    Vector3 horizontal;
-    Vector3 vertical;
+    Point3 lowerLeftOffset;
+    Vector3 horizontalVector;
+    Vector3 verticalVector;
 };

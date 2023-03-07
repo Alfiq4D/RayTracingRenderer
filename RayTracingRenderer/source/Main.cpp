@@ -48,10 +48,7 @@ int main()
 	const int maxDepth = 50;
 
 	// Camera.
-	auto viewportHeight = 2.0;
-	auto viewportWidth = aspectRatio * viewportHeight;
-	auto focalLength = 1.0;
-	Camera camera(viewportWidth, viewportHeight, focalLength);
+	Camera camera(Point3(0,0,0), Point3(0,0,-1), Vector3(0,1,0), 90, aspectRatio);
 
 	// Materials.
 	auto groundMaterial = std::make_shared<LambertianMaterial>(Color(0.8, 0.8, 0.8));
