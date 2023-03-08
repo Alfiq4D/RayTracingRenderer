@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Vector3.h"
+#include "Utility.h"
 
 namespace rtr
 {
