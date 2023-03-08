@@ -11,6 +11,10 @@
 #include <iostream>
 #include <vector>
 
+#define __STDC_LIB_EXT1__
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+
+#include <stb_image_write.h>
 #include <OpenImageDenoise/oidn.hpp>
 
 namespace rtr
@@ -37,6 +41,7 @@ namespace rtr
 						pixelColor += RayColor(ray, scene, maxDepth);
 					}
 					pixelColor.Normalize(samplesPerPixel);
+					pixelColor.CorrectGamma();
 					imageOutBuffer.push_back(static_cast<float>(pixelColor.R()));
 					imageOutBuffer.push_back(static_cast<float>(pixelColor.G()));
 					imageOutBuffer.push_back(static_cast<float>(pixelColor.B()));
@@ -107,6 +112,11 @@ namespace rtr
 				auto pixelColor = rtr::Color(imageBuffer[i], imageBuffer[i + 1], imageBuffer[i + 2]);
 				std::cout << pixelColor;
 			}
+
+			stbi_flip_vertically_on_write(false);
+			auto buffer = ConvertBufferToBytes(imageBuffer);
+			const char* name = "C:/Users/Kamil/source/repos/RayTracingRenderer/x64/Release/image.png";
+			auto n = stbi_write_png(name, imageWidth, imageHeight, 3, (void*)&buffer[0], 0);
 		}
 
 	private:
@@ -136,6 +146,19 @@ namespace rtr
 			auto t = 0.5 * (unitDirection.Y() + 1.0);
 
 			return (1.0 - t) * Color(1.0, 1.0, 1.0) + t * Color(0.5, 0.7, 1.0);
+		}
+
+		std::vector<unsigned char> ConvertBufferToBytes(const std::vector<float>& imageBuffer)
+		{
+			std::vector<unsigned char> charBuffer;
+			charBuffer.resize(static_cast<size_t>(imageWidth) * imageHeight * 3, 0);
+
+			for (size_t i = 0; i < imageBuffer.size(); i++)
+			{
+				charBuffer[i] = static_cast<unsigned char>(255.999 * imageBuffer[i]);
+			}
+
+			return charBuffer;
 		}
 
 	private:

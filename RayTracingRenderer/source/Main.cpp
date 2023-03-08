@@ -88,7 +88,7 @@ int main()
 	const double aspectRatio = 16.0 / 9.0;
 	const int imageWidth = 300;
 	const int imageHeight = static_cast<int>(imageWidth / aspectRatio);
-	const int samplesPerPixel = 50;
+	const int samplesPerPixel = 30;
 	const int maxDepth = 50;
 
 	// Camera.

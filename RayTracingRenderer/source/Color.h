@@ -121,7 +121,6 @@ namespace rtr
 
 	std::ostream& operator<<(std::ostream& out, Color& color)
 	{
-		color.CorrectGamma();
 		out << static_cast<int>(255.999 * color.R()) << ' '
 			<< static_cast<int>(255.999 * color.G()) << ' '
 			<< static_cast<int>(255.999 * color.B()) << '\n';
