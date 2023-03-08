@@ -10,6 +10,9 @@
 
 #include <iostream>
 
+#include <OpenImageDenoise/oidn.hpp>
+#include <OpenImageDenoise/oidn.h>
+
 namespace rtr
 {
 	Color RayColor(const Ray& r, const Scene& scene, int depth)
@@ -113,9 +116,9 @@ int main()
 {
 	// Image parameters.
 	const double aspectRatio = 16.0 / 9.0;
-	const int imageWidth = 120;
+	const int imageWidth = 300;
 	const int imageHeight = static_cast<int>(imageWidth / aspectRatio);
-	const int samplesPerPixel = 500;
+	const int samplesPerPixel = 50;
 	const int maxDepth = 50;
 
 	// Camera.
@@ -130,6 +133,11 @@ int main()
 	rtr::Camera camera(cameraPosition, cameraLookAt, viewUp, cameraFov, aspectRatio, cameraAperture, cameraDistToFocus);
 
 	auto scene = rtr::GenerateRandomScene();
+
+	std::vector<float> imageBuffer;
+	std::vector<float> imageOutBuffer;
+	imageBuffer.reserve(imageWidth * imageHeight * 3);
+	imageOutBuffer.resize(imageWidth * imageHeight * 3, 0.0f);
 
 	// Render image.
 	std::cout << "P3\n" << imageWidth << ' ' << imageHeight << "\n255\n";
@@ -148,9 +156,70 @@ int main()
 				pixelColor += rtr::RayColor(ray, scene, maxDepth);
 			}
 			pixelColor.Normalize(samplesPerPixel);
-			std::cout << pixelColor;
+			// std::cout << pixelColor;
+			imageBuffer.push_back(pixelColor.R());
+			imageBuffer.push_back(pixelColor.G());
+			imageBuffer.push_back(pixelColor.B());
 		}
 	}
+
+	auto format = oidn::Format::Float3;
+
+	oidn::DeviceRef device = oidn::newDevice();
+	device.commit();
+
+	// Create a filter for denoising a beauty (color) image using optional auxiliary images too
+	oidn::FilterRef filter = device.newFilter("RT"); // generic ray tracing filter
+	filter.setImage("color", (void*)&imageBuffer[0], oidn::Format::Float3, imageWidth, imageHeight); // beauty
+	//filter.setImage("albedo", albedoPtr, oidn::Format::Float3, width, height); // auxiliary
+	//filter.setImage("normal", normalPtr, oidn::Format::Float3, width, height); // auxiliary
+	filter.setImage("output", (void*)&imageOutBuffer[0], oidn::Format::Float3, imageWidth, imageHeight); // denoised beauty
+	filter.set("hdr", false); // beauty image is HDR
+	filter.commit();
+
+	// Filter the image
+	filter.execute();
+
+	// Check for errors
+	const char* errorMessage;
+	if (device.getError(errorMessage) != oidn::Error::None)
+		std::cout << "Error: " << errorMessage << std::endl;
+
+
+	for (int i = 0; i < imageWidth * imageHeight * 3; i+=3)
+	{
+		auto pixelColor = rtr::Color(imageOutBuffer[i], imageOutBuffer[i + 1], imageOutBuffer[i + 2]);
+		std::cout << pixelColor;
+	}
+
+	//// Create a filter for denoising a beauty (color) image using prefiltered auxiliary images too
+	//oidn::FilterRef filter = device.newFilter("RT"); // generic ray tracing filter
+	//filter.setImage("color", colorPtr, oidn::Format::Float3, width, height); // beauty
+	//filter.setImage("albedo", albedoPtr, oidn::Format::Float3, width, height); // auxiliary
+	//filter.setImage("normal", normalPtr, oidn::Format::Float3, width, height); // auxiliary
+	//filter.setImage("output", outputPtr, oidn::Format::Float3, width, height); // denoised beauty
+	//filter.set("hdr", true); // beauty image is HDR
+	//filter.set("cleanAux", true); // auxiliary images will be prefiltered
+	//filter.commit();
+
+	//// Create a separate filter for denoising an auxiliary albedo image (in-place)
+	//oidn::FilterRef albedoFilter = device.newFilter("RT"); // same filter type as for beauty
+	//albedoFilter.setImage("albedo", albedoPtr, oidn::Format::Float3, width, height);
+	//albedoFilter.setImage("output", albedoPtr, oidn::Format::Float3, width, height);
+	//albedoFilter.commit();
+
+	//// Create a separate filter for denoising an auxiliary normal image (in-place)
+	//oidn::FilterRef normalFilter = device.newFilter("RT"); // same filter type as for beauty
+	//normalFilter.setImage("normal", normalPtr, oidn::Format::Float3, width, height);
+	//normalFilter.setImage("output", normalPtr, oidn::Format::Float3, width, height);
+	//normalFilter.commit();
+
+	//// Prefilter the auxiliary images
+	//albedoFilter.execute();
+	//normalFilter.execute();
+
+	//// Filter the beauty image
+	//filter.execute();
 
 	std::cerr << "\nDone\n";
 }
