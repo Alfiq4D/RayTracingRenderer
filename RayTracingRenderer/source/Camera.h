@@ -35,6 +35,11 @@ namespace rtr
             return Ray(origin + offsetVector, lowerLeftOffset + u * horizontalVector + v * verticalVector - offsetVector);
         }
 
+        void SetAperture(double aperture)
+        {
+            lensRadius = aperture / 2;
+        }
+
     private:
         Point3 origin;
         Point3 lowerLeftOffset;

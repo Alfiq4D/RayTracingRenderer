@@ -85,11 +85,11 @@ namespace rtr
 
 int main()
 {
-	const std::string fileName = "C:/Users/Kamil/source/repos/RayTracingRenderer/x64/Release/image.jpg";
+	const std::string fileName = "C:/Users/Kamil/source/repos/RayTracingRenderer/x64/Release/imageLowNoiseDenoisedAux2.bmp";
 
 	// Image parameters.
 	const double aspectRatio = 16.0 / 9.0;
-	const int imageWidth = 400;
+	const int imageWidth = 800;
 	const int imageHeight = static_cast<int>(imageWidth / aspectRatio);
 	const int samplesPerPixel = 30;
 	const int maxDepth = 50;
@@ -109,12 +109,22 @@ int main()
 
 	std::vector<float> imageBuffer;
 	imageBuffer.resize(static_cast<size_t>(imageWidth) * imageHeight * 3, 0.0f);
+	std::vector<float> albedoBuffer;
+	albedoBuffer.resize(static_cast<size_t>(imageWidth) * imageHeight * 3, 0.0f);
+	std::vector<float> normalBuffer;
+	normalBuffer.resize(static_cast<size_t>(imageWidth) * imageHeight * 3, 0.0f);
 	std::vector<float> imageOutBuffer;
 	imageOutBuffer.resize(static_cast<size_t>(imageWidth) * imageHeight * 3, 0.0f);
 
 	rtr::Renderer renderer(imageWidth, imageHeight);
 	renderer.RenderImage(camera, scene, samplesPerPixel, maxDepth, imageBuffer);
-	renderer.DenoiseImage(imageBuffer, imageOutBuffer);
+
+	camera.SetAperture(0.0);
+	renderer.RenderAlbedo(camera, scene, samplesPerPixel / 3, albedoBuffer);
+	renderer.RenderNormal(camera, scene, samplesPerPixel / 3, normalBuffer);
+
+	renderer.DenoiseImage(imageBuffer, albedoBuffer, normalBuffer, imageOutBuffer);
+	
 	rtr::SaveImage(fileName, imageOutBuffer, imageWidth, imageHeight);
 
 	std::cout << "Done\n";
