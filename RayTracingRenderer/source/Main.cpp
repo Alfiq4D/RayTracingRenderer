@@ -86,9 +86,9 @@ int main()
 {
 	// Image parameters.
 	const double aspectRatio = 16.0 / 9.0;
-	const int imageWidth = 300;
+	const int imageWidth = 600;
 	const int imageHeight = static_cast<int>(imageWidth / aspectRatio);
-	const int samplesPerPixel = 30;
+	const int samplesPerPixel = 50;
 	const int maxDepth = 50;
 
 	// Camera.
@@ -105,7 +105,7 @@ int main()
 	auto scene = rtr::GenerateRandomScene();
 
 	std::vector<float> imageBuffer;
-	imageBuffer.reserve(static_cast<size_t>(imageWidth) * imageHeight * 3);
+	imageBuffer.resize(static_cast<size_t>(imageWidth) * imageHeight * 3, 0.0f);
 	std::vector<float> imageOutBuffer;
 	imageOutBuffer.resize(static_cast<size_t>(imageWidth) * imageHeight * 3, 0.0f);
 

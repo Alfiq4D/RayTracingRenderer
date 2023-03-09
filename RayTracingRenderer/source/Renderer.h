@@ -11,6 +11,10 @@
 #include <iostream>
 #include <vector>
 
+#include <chrono>
+
+#include <ppl.h>
+
 #define __STDC_LIB_EXT1__
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
@@ -26,27 +30,42 @@ namespace rtr
 		Renderer(int renderWidth, int renderHeight) : imageWidth(renderWidth), imageHeight(renderHeight) {}
 
 		void RenderImage(const Camera& camera, const Scene& scene, int samplesPerPixel, int maxDepth, std::vector<float>& imageOutBuffer)
-		{
-			for (int j = imageHeight - 1; j >= 0; --j)
-			{
-				std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
-				for (int i = 0; i < imageWidth; i++)
+		{	
+			concurrency::critical_section criticalSection;
+			int renderedLinesCounter = 0;
+			const auto startTimePar = std::chrono::high_resolution_clock::now();
+
+			concurrency::parallel_for(int(0), imageHeight, [&](int k)
 				{
-					Color pixelColor(0.0, 0.0, 0.0);
-					for (int sample = 0; sample < samplesPerPixel; sample++)
+					int j = imageHeight - 1 - k;
+					for (int i = 0; i < imageWidth; i++)
 					{
-						auto u = (i + util::RandomDouble()) / (imageWidth - 1);
-						auto v = (j + util::RandomDouble()) / (imageHeight - 1);
-						rtr::Ray ray = camera.GetRay(u, v);
-						pixelColor += RayColor(ray, scene, maxDepth);
+						Color pixelColor(0.0, 0.0, 0.0);
+						for (int sample = 0; sample < samplesPerPixel; sample++)
+						{
+							auto u = (i + util::RandomDouble()) / (imageWidth - 1);
+							auto v = (j + util::RandomDouble()) / (imageHeight - 1);
+							rtr::Ray ray = camera.GetRay(u, v);
+							pixelColor += RayColor(ray, scene, maxDepth);
+						}
+						pixelColor.Normalize(samplesPerPixel);
+						pixelColor.CorrectGamma();
+						imageOutBuffer[(imageHeight - 1 - j) * imageWidth * 3 + i * 3] = static_cast<float>(pixelColor.R());
+						imageOutBuffer[(imageHeight - 1 - j) * imageWidth * 3 + i * 3 + 1] = static_cast<float>(pixelColor.G());
+						imageOutBuffer[(imageHeight - 1 - j) * imageWidth * 3 + i * 3 + 2] = static_cast<float>(pixelColor.B());
 					}
-					pixelColor.Normalize(samplesPerPixel);
-					pixelColor.CorrectGamma();
-					imageOutBuffer.push_back(static_cast<float>(pixelColor.R()));
-					imageOutBuffer.push_back(static_cast<float>(pixelColor.G()));
-					imageOutBuffer.push_back(static_cast<float>(pixelColor.B()));
-				}
-			}
+
+					criticalSection.lock();
+					renderedLinesCounter++;
+					if (renderedLinesCounter % 50 == 0)
+					{
+						std::cerr << "\rRendered lines: " << renderedLinesCounter << " from " << imageHeight << std::flush;
+					}
+					criticalSection.unlock();
+				});
+
+			const auto endTimePar = std::chrono::high_resolution_clock::now();
+			std::cerr << "\rTime parallel: " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(endTimePar - startTimePar).count() << " ms" << '\n';
 		}
 
 		void DenoiseImage(const std::vector<float>& imageBuffer, std::vector<float>& imageOutBuffer)
@@ -106,12 +125,12 @@ namespace rtr
 
 		void SaveImage(const std::vector<float>& imageBuffer)
 		{
-			std::cout << "P3\n" << imageWidth << ' ' << imageHeight << "\n255\n";
-			for (int i = 0; i < imageWidth * imageHeight * 3; i += 3)
-			{
-				auto pixelColor = rtr::Color(imageBuffer[i], imageBuffer[i + 1], imageBuffer[i + 2]);
-				std::cout << pixelColor;
-			}
+			//std::cout << "P3\n" << imageWidth << ' ' << imageHeight << "\n255\n";
+			//for (int i = 0; i < imageWidth * imageHeight * 3; i += 3)
+			//{
+			//	auto pixelColor = rtr::Color(imageBuffer[i], imageBuffer[i + 1], imageBuffer[i + 2]);
+			//	std::cout << pixelColor;
+			//}
 
 			stbi_flip_vertically_on_write(false);
 			auto buffer = ConvertBufferToBytes(imageBuffer);
