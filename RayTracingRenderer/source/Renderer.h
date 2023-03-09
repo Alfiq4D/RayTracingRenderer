@@ -3,22 +3,14 @@
 #include "Color.h"
 #include "Ray.h"
 #include "Camera.h"
-#include "Utility"
 #include "HittableObject.h"
 #include "Scene.h"
 #include "Material.h"
 
 #include <iostream>
 #include <vector>
-
 #include <chrono>
-
 #include <ppl.h>
-
-#define __STDC_LIB_EXT1__
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-
-#include <stb_image_write.h>
 #include <OpenImageDenoise/oidn.hpp>
 
 namespace rtr
@@ -33,7 +25,7 @@ namespace rtr
 		{	
 			concurrency::critical_section criticalSection;
 			int renderedLinesCounter = 0;
-			const auto startTimePar = std::chrono::high_resolution_clock::now();
+			const auto startTime = std::chrono::high_resolution_clock::now();
 
 			concurrency::parallel_for(int(0), imageHeight, [&](int k)
 				{
@@ -59,13 +51,13 @@ namespace rtr
 					renderedLinesCounter++;
 					if (renderedLinesCounter % 50 == 0)
 					{
-						std::cerr << "\rRendered lines: " << renderedLinesCounter << " from " << imageHeight << std::flush;
+						std::cout << "Rendered lines: " << renderedLinesCounter << "/" << imageHeight << '\n';
 					}
 					criticalSection.unlock();
 				});
 
-			const auto endTimePar = std::chrono::high_resolution_clock::now();
-			std::cerr << "\rTime parallel: " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(endTimePar - startTimePar).count() << " ms" << '\n';
+			const auto endTime = std::chrono::high_resolution_clock::now();
+			std::cout << "Render time:: " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(endTime - startTime).count() << " ms" << '\n';
 		}
 
 		void DenoiseImage(const std::vector<float>& imageBuffer, std::vector<float>& imageOutBuffer)
@@ -123,21 +115,6 @@ namespace rtr
 			//filter.execute();
 		}
 
-		void SaveImage(const std::vector<float>& imageBuffer)
-		{
-			//std::cout << "P3\n" << imageWidth << ' ' << imageHeight << "\n255\n";
-			//for (int i = 0; i < imageWidth * imageHeight * 3; i += 3)
-			//{
-			//	auto pixelColor = rtr::Color(imageBuffer[i], imageBuffer[i + 1], imageBuffer[i + 2]);
-			//	std::cout << pixelColor;
-			//}
-
-			stbi_flip_vertically_on_write(false);
-			auto buffer = ConvertBufferToBytes(imageBuffer);
-			const char* name = "C:/Users/Kamil/source/repos/RayTracingRenderer/x64/Release/image.png";
-			auto n = stbi_write_png(name, imageWidth, imageHeight, 3, (void*)&buffer[0], 0);
-		}
-
 	private:
 		Color RayColor(const Ray& r, const Scene& scene, int depth)
 		{
@@ -165,19 +142,6 @@ namespace rtr
 			auto t = 0.5 * (unitDirection.Y() + 1.0);
 
 			return (1.0 - t) * Color(1.0, 1.0, 1.0) + t * Color(0.5, 0.7, 1.0);
-		}
-
-		std::vector<unsigned char> ConvertBufferToBytes(const std::vector<float>& imageBuffer)
-		{
-			std::vector<unsigned char> charBuffer;
-			charBuffer.resize(static_cast<size_t>(imageWidth) * imageHeight * 3, 0);
-
-			for (size_t i = 0; i < imageBuffer.size(); i++)
-			{
-				charBuffer[i] = static_cast<unsigned char>(255.999 * imageBuffer[i]);
-			}
-
-			return charBuffer;
 		}
 
 	private:

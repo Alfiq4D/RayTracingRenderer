@@ -7,6 +7,7 @@
 #include "Utility.h"
 #include "Camera.h"
 #include "Material.h"
+#include "Image.h"
 
 #include <iostream>
 
@@ -84,11 +85,13 @@ namespace rtr
 
 int main()
 {
+	const std::string fileName = "C:/Users/Kamil/source/repos/RayTracingRenderer/x64/Release/image.jpg";
+
 	// Image parameters.
 	const double aspectRatio = 16.0 / 9.0;
-	const int imageWidth = 600;
+	const int imageWidth = 400;
 	const int imageHeight = static_cast<int>(imageWidth / aspectRatio);
-	const int samplesPerPixel = 50;
+	const int samplesPerPixel = 30;
 	const int maxDepth = 50;
 
 	// Camera.
@@ -112,7 +115,7 @@ int main()
 	rtr::Renderer renderer(imageWidth, imageHeight);
 	renderer.RenderImage(camera, scene, samplesPerPixel, maxDepth, imageBuffer);
 	renderer.DenoiseImage(imageBuffer, imageOutBuffer);
-	renderer.SaveImage(imageOutBuffer);
+	rtr::SaveImage(fileName, imageOutBuffer, imageWidth, imageHeight);
 
-	std::cerr << "\nDone\n";
+	std::cout << "Done\n";
 }

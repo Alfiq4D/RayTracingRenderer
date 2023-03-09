@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Constants.h"
+
 #include <algorithm>
 #include <iostream>
 
@@ -119,11 +121,16 @@ namespace rtr
 		return (1 / d) * c;
 	}
 
+	inline unsigned char DoubleToByteColor(double colorChannel)
+	{
+		return static_cast<unsigned char>(consts::doubleToByteRatio * colorChannel);
+	}
+
 	std::ostream& operator<<(std::ostream& out, Color& color)
 	{
-		out << static_cast<int>(255.999 * color.R()) << ' '
-			<< static_cast<int>(255.999 * color.G()) << ' '
-			<< static_cast<int>(255.999 * color.B()) << '\n';
+		out << static_cast<unsigned int>(DoubleToByteColor(color.R())) << ' '
+			<< static_cast<unsigned int>(DoubleToByteColor(color.G())) << ' '
+			<< static_cast<unsigned int>(DoubleToByteColor(color.B())) << '\n';
 		return out;
 	}
 }
